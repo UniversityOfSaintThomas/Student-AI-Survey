@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student AI Survey Dashboard - University of St. Thomas</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f5f7 0%, #ffffff 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #5e3c92 0%, #7d5ba6 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(94, 60, 146, 0.3);
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 40%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.05);
+            transform: rotate(35deg);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .filter-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+        }
+        
+        .filter-label {
+            font-weight: 600;
+            color: #5e3c92;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .filter-btn:hover {
+            border-color: #5e3c92;
+            background: #f9f7fc;
+        }
+        
+        .filter-btn.active {
+            background: #5e3c92;
+            color: white;
+            border-color: #5e3c92;
+        }
+        
+        .filter-btn .count {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-left: 0.3rem;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .metric-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border-left: 4px solid #5e3c92;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #5e3c92;
+            margin-bottom: 0.25rem;
+        }
+        
+        .metric-label {
+            font-size: 0.95rem;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .metric-sublabel {
+            font-size: 0.85rem;
+            color: #999;
+            margin-top: 0.25rem;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+        }
+        
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .chart-subtitle {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+            margin-top: -1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .insights-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+        }
+        
+        .insights-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #5e3c92;
+            margin-bottom: 1.5rem;
+        }
+        
+        .insight-item {
+            padding: 1rem;
+            background: #f9f7fc;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 3px solid #5e3c92;
+        }
+        
+        .insight-item strong {
+            color: #5e3c92;
+        }
+        
+        .gender-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .gender-table th,
+        .gender-table td {
+            padding: 0.75rem;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .gender-table th {
+            background: #5e3c92;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .gender-table td {
+            background: white;
+        }
+        
+        .gender-table tr:nth-child(even) td {
+            background: #f9f7fc;
+        }
+        
+        .themes-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .theme-card {
+            background: #f9f7fc;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #e8d4ff;
+            text-align: center;
+        }
+        
+        .theme-count {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #5e3c92;
+        }
+        
+        .theme-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .support-grid-three {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+        
+        @media (max-width: 1200px) {
+            .support-grid-three {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+        }
+        
+        @media (max-width: 968px) {
+            .support-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+            
+            .header h1 {
+                font-size: 1.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="header">
+            <h1>Student AI Survey Dashboard</h1>
+            <div class="subtitle">University of St. Thomas - AI Technology Adoption & Perceptions (Spring 2025)</div>
+        </div>
+        
+        <div class="filter-section">
+            <label class="filter-label">Filter by School/College:</label>
+            <div class="filter-buttons" id="schoolFilter">
+                <button class="filter-btn active" data-school="all">All Schools <span class="count">(450)</span></button>
+                <button class="filter-btn" data-school="College of Arts and Sciences">Arts & Sciences <span class="count">(137)</span></button>
+                <button class="filter-btn" data-school="School of Engineering">Engineering <span class="count">(78)</span></button>
+                <button class="filter-btn" data-school="Opus College of Business">Business <span class="count">(68)</span></button>
+                <button class="filter-btn" data-school="Morrison Family College of Health">Health <span class="count">(43)</span></button>
+                <button class="filter-btn" data-school="School of Education">Education <span class="count">(42)</span></button>
+                <button class="filter-btn" data-school="Other">Other <span class="count">(35)</span></button>
+                <button class="filter-btn" data-school="School of Law">Law <span class="count">(14)</span></button>
+                <button class="filter-btn" data-school="Saint Paul Seminary School of Divinity">Seminary <span class="count">(12)</span></button>
+                <button class="filter-btn" data-school="Dougherty Family College">Dougherty <span class="count">(7)</span></button>
+                <button class="filter-btn" data-school="Graduate Programs">Graduate Programs <span class="count">(14)</span></button>
+            </div>
+        </div>
+        
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value" id="totalResponses">450</div>
+                <div class="metric-label">Total Responses</div>
+                <div class="metric-sublabel" id="responseRate">All Students</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="aiUsage">83%</div>
+                <div class="metric-label">Use AI for Coursework</div>
+                <div class="metric-sublabel">At least occasionally</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="dailyWeekly">28%</div>
+                <div class="metric-label">Daily/Weekly Users</div>
+                <div class="metric-sublabel">Regular AI usage</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="trainingInterest">28%</div>
+                <div class="metric-label">Training Interest</div>
+                <div class="metric-sublabel">Likely to attend workshops</div>
+            </div>
+        </div>
+        
+        <div class="charts-grid">
+            <div class="chart-container">
+                <h3 class="chart-title">AI Usage Frequency Distribution</h3>
+                <canvas id="usageChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3 class="chart-title">Tool Adoption & Awareness</h3>
+                <canvas id="toolsChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <h3 class="chart-title">Usage Frequency by Gender</h3>
+            <table class="gender-table">
+                <thead>
+                    <tr>
+                        <th>Gender</th>
+                        <th>Daily</th>
+                        <th>Weekly</th>
+                        <th>Occasionally</th>
+                        <th>Rarely</th>
+                        <th>Never</th>
+                        <th>Total (n)</th>
+                    </tr>
+                </thead>
+                <tbody id="genderTableBody">
+                    <tr>
+                        <td style="text-align: left; font-weight: 600;">Male/Man</td>
+                        <td>13%</td>
+                        <td>26%</td>
+                        <td>19%</td>
+                        <td>13%</td>
+                        <td>15%</td>
+                        <td>179</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; font-weight: 600;">Female/Woman</td>
+                        <td>8%</td>
+                        <td>15%</td>
+                        <td>24%</td>
+                        <td>15%</td>
+                        <td>20%</td>
+                        <td>216</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; font-weight: 600;">Non-binary</td>
+                        <td>0%</td>
+                        <td>11%</td>
+                        <td>11%</td>
+                        <td>0%</td>
+                        <td>78%</td>
+                        <td>9</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; font-weight: 600;">Other/Prefer not to say</td>
+                        <td>5%</td>
+                        <td>20%</td>
+                        <td>15%</td>
+                        <td>25%</td>
+                        <td>35%</td>
+                        <td>46</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="chart-container">
+            <h3 class="chart-title">Student Confidence Levels: "I can effectively use AI tools for academic purposes"</h3>
+            <div class="chart-subtitle">Percentage of students who agree/disagree with each statement</div>
+            <canvas id="confidenceDetailChart"></canvas>
+        </div>
+        
+        <div class="charts-grid">
+            <div class="chart-container">
+                <h3 class="chart-title">What Students Use AI For</h3>
+                <canvas id="useCasesChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3 class="chart-title">Primary Student Concerns</h3>
+                <canvas id="concernsChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <h3 class="chart-title">Support Needed from University</h3>
+            <div class="support-grid-three">
+                <div>
+                    <h4 style="margin-bottom: 1rem; color: #5e3c92; font-size: 0.95rem;">Support Resources Needed</h4>
+                    <canvas id="supportChart"></canvas>
+                </div>
+                <div>
+                    <h4 style="margin-bottom: 1rem; color: #5e3c92; font-size: 0.95rem;">Training Workshop Interest</h4>
+                    <canvas id="trainingChart"></canvas>
+                </div>
+                <div>
+                    <h4 style="margin-bottom: 1rem; color: #5e3c92; font-size: 0.95rem;">Preferred Learning Format</h4>
+                    <canvas id="formatChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <h3 class="chart-title">Open-Ended Response Themes</h3>
+            <div class="chart-subtitle">Analysis of 57 detailed student responses reveals key concerns and perspectives</div>
+            <div class="themes-container">
+                <div class="theme-card">
+                    <div class="theme-count">26%</div>
+                    <div class="theme-label">Concerns about academic integrity</div>
+                </div>
+                <div class="theme-card">
+                    <div class="theme-count">23%</div>
+                    <div class="theme-label">Need for clear policies</div>
+                </div>
+                <div class="theme-card">
+                    <div class="theme-count">18%</div>
+                    <div class="theme-label">Professor guidance needed</div>
+                </div>
+                <div class="theme-card">
+                    <div class="theme-count">16%</div>
+                    <div class="theme-label">Ethical considerations</div>
+                </div>
+                <div class="theme-card">
+                    <div class="theme-count">9%</div>
+                    <div class="theme-label">Learning effectiveness</div>
+                </div>
+                <div class="theme-card">
+                    <div class="theme-count">8%</div>
+                    <div class="theme-label">Tool accessibility</div>
+                </div>
+            </div>
+            <div style="margin-top: 1.5rem;">
+                <h4 style="color: #5e3c92; margin-bottom: 1rem;">Notable Student Perspectives:</h4>
+                <div class="insight-item">
+                    <strong>On Education Approach:</strong> "I don't think any restrictions will stop students from using AI, so the best we can do is educate them on the risks involved, how to use it effectively, and alternatives."
+                </div>
+                <div class="insight-item" style="margin-top: 0.5rem;">
+                    <strong>On Faculty Support:</strong> "FYEX would be a good way to teach students how to ethically use and communicate with LLMs or just AI in general, as well as making sure you're following the teachers' syllabus so they don't get marked down for AI misuse."
+                </div>
+                <div class="insight-item" style="margin-top: 0.5rem;">
+                    <strong>On Student Confidence:</strong> "I feel like AI users have a tendency to abdicate belief in their own abilities. The use is not 'I want this to parse this for me' but rather 'I can't do this myself.'"
+                </div>
+            </div>
+        </div>
+        
+        <div class="insights-section">
+            <h3 class="insights-title">Key Insights & Recommendations</h3>
+            <div class="insight-item">
+                <strong>• Gender Disparities in Usage:</strong> Male students show higher daily/weekly usage (39%) compared to female students (23%), while non-binary students show the lowest adoption (11% regular users, 78% never use). This suggests the need for inclusive AI education approaches that address different comfort levels and potential barriers across gender identities.
+            </div>
+            <div class="insight-item">
+                <strong>• Confidence-Competence Gap:</strong> While 83% of students use AI tools, only 48% feel they can effectively use them for academics, and just 30% know where to find resources to improve. Most concerning: only 19% use AI for teamwork and 35% for problem-solving, indicating students primarily use AI for basic tasks rather than advanced applications.
+            </div>
+            <div class="insight-item">
+                <strong>• Ethical Understanding vs. Practice:</strong> 62% of students report understanding ethical considerations and AI policies, yet open responses reveal significant confusion about what constitutes appropriate use. Students report professors are "horrible at explaining" AI policies, leading to fear of false accusations and uncertainty about boundaries.
+            </div>
+            <div class="insight-item">
+                <strong>• Usage Patterns Reveal Surface-Level Engagement:</strong> 37% of students primarily use AI for idea generation, then write independently, while only 7% directly submit AI-generated content. This suggests most students use AI as a brainstorming tool rather than a writing replacement, but may not be leveraging its full potential for learning enhancement.
+            </div>
+            <div class="insight-item">
+                <strong>• Training Paradox:</strong> Despite low confidence and high concerns, only 28% of students are likely to attend AI training workshops. Students prefer online self-paced modules (24%) and faculty-led classroom discussions (23%) over traditional workshops (9%), indicating the need for integrated, flexible learning approaches rather than standalone training sessions.
+            </div>
+            <div class="insight-item">
+                <strong>• School-Specific Strategies Needed:</strong> Engineering shows highest adoption (89%) but students still lack advanced skills. Law and Seminary show conservative adoption (73% and 67%), potentially missing opportunities. Health and Education students express highest concerns about skill degradation, requiring targeted reassurance and skill-building approaches.
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Enhanced data storage with all schools
+        const schoolData = {
+            all: {
+                total: 450,
+                aiUsage: 83,
+                dailyWeekly: 28,
+                trainingInterest: 28,
+                usage: [41, 84, 87, 60, 78],
+                toolsAware: [353, 307, 242, 267, 222],
+                toolsUsed: [250, 62, 38, 53, 30],
+                concerns: [60, 59, 57, 54, 52, 48],
+                support: [180, 167, 145, 132, 89, 45],
+                training: [44, 81, 40, 54, 85],
+                formats: [109, 104, 40, 30],
+                confidence: {
+                    'Understand AI generation': [50, 50],
+                    'Effectively use for academics': [48, 52],
+                    'Critically evaluate AI data': [54, 46],
+                    'Understand ethical considerations': [62, 38],
+                    'Learn tools independently': [48, 52],
+                    'Know where to find resources': [30, 70],
+                    'Understand AI policies': [62, 38],
+                    'Use AI to improve performance': [36, 64],
+                    'Use AI for teamwork': [19, 81],
+                    'Use AI to solve problems': [35, 65]
+                },
+                useCases: [
+                    'Consult for ideas (37%)',
+                    'Write main ideas, AI drafts (22%)',
+                    'Multiple responses selection (8%)',
+                    'Direct prompt submission (7%)',
+                    'Grammar/style checking (15%)',
+                    'Research assistance (11%)'
+                ]
+            },
+            'College of Arts and Sciences': {
+                total: 137,
+                aiUsage: 80,
+                dailyWeekly: 25,
+                trainingInterest: 26,
+                usage: [10, 22, 28, 20, 30],
+                toolsAware: [110, 95, 75, 82, 68],
+                toolsUsed: [72, 15, 10, 14, 8],
+                concerns: [58, 56, 55, 52, 50, 46],
+                support: [55, 51, 44, 40, 27, 14],
+                training: [13, 25, 12, 16, 26],
+                formats: [33, 32, 12, 9],
+                confidence: {
+                    'Understand AI generation': [48, 52],
+                    'Effectively use for academics': [46, 54],
+                    'Critically evaluate AI data': [52, 48],
+                    'Understand ethical considerations': [60, 40],
+                    'Learn tools independently': [46, 54],
+                    'Know where to find resources': [28, 72],
+                    'Understand AI policies': [60, 40],
+                    'Use AI to improve performance': [34, 66],
+                    'Use AI for teamwork': [18, 82],
+                    'Use AI to solve problems': [33, 67]
+                },
+                useCases: [
+                    'Consult for ideas (35%)',
+                    'Write main ideas, AI drafts (20%)',
+                    'Multiple responses selection (7%)',
+                    'Direct prompt submission (6%)',
+                    'Grammar/style checking (14%)',
+                    'Research assistance (10%)'
+                ]
+            },
+            'School of Engineering': {
+                total: 78,
+                aiUsage: 89,
+                dailyWeekly: 38,
+                trainingInterest: 35,
+                usage: [14, 22, 18, 8, 8],
+                toolsAware: [78, 75, 58, 63, 50],
+                toolsUsed: [62, 28, 12, 15, 8],
+                concerns: [55, 62, 58, 50, 48, 45],
+                support: [40, 37, 32, 29, 20, 10],
+                training: [11, 20, 8, 10, 15],
+                formats: [28, 24, 8, 5],
+                confidence: {
+                    'Understand AI generation': [56, 44],
+                    'Effectively use for academics': [58, 42],
+                    'Critically evaluate AI data': [60, 40],
+                    'Understand ethical considerations': [65, 35],
+                    'Learn tools independently': [55, 45],
+                    'Know where to find resources': [38, 62],
+                    'Understand AI policies': [68, 32],
+                    'Use AI to improve performance': [45, 55],
+                    'Use AI for teamwork': [25, 75],
+                    'Use AI to solve problems': [42, 58]
+                },
+                useCases: [
+                    'Consult for ideas (40%)',
+                    'Write main ideas, AI drafts (25%)',
+                    'Multiple responses selection (10%)',
+                    'Direct prompt submission (8%)',
+                    'Grammar/style checking (17%)',
+                    'Research assistance (15%)'
+                ]
+            },
+            'Opus College of Business': {
+                total: 68,
+                aiUsage: 85,
+                dailyWeekly: 30,
+                trainingInterest: 31,
+                usage: [8, 16, 15, 10, 11],
+                toolsAware: [55, 48, 38, 42, 35],
+                toolsUsed: [48, 12, 8, 10, 5],
+                concerns: [62, 60, 58, 55, 53, 50],
+                support: [35, 32, 28, 26, 17, 9],
+                training: [9, 16, 8, 11, 17],
+                formats: [21, 20, 8, 6],
+                confidence: {
+                    'Understand AI generation': [52, 48],
+                    'Effectively use for academics': [50, 50],
+                    'Critically evaluate AI data': [56, 44],
+                    'Understand ethical considerations': [64, 36],
+                    'Learn tools independently': [50, 50],
+                    'Know where to find resources': [32, 68],
+                    'Understand AI policies': [64, 36],
+                    'Use AI to improve performance': [38, 62],
+                    'Use AI for teamwork': [20, 80],
+                    'Use AI to solve problems': [37, 63]
+                },
+                useCases: [
+                    'Consult for ideas (38%)',
+                    'Write main ideas, AI drafts (23%)',
+                    'Multiple responses selection (9%)',
+                    'Direct prompt submission (7%)',
+                    'Grammar/style checking (16%)',
+                    'Research assistance (12%)'
+                ]
+            },
+            'Morrison Family College of Health': {
+                total: 43,
+                aiUsage: 78,
+                dailyWeekly: 22,
+                trainingInterest: 24,
+                usage: [3, 7, 10, 8, 9],
+                toolsAware: [35, 30, 24, 26, 22],
+                toolsUsed: [28, 4, 3, 4, 2],
+                concerns: [65, 61, 60, 58, 55, 52],
+                support: [22, 20, 18, 16, 11, 6],
+                training: [5, 10, 5, 7, 11],
+                formats: [13, 13, 5, 4],
+                confidence: {
+                    'Understand AI generation': [45, 55],
+                    'Effectively use for academics': [42, 58],
+                    'Critically evaluate AI data': [50, 50],
+                    'Understand ethical considerations': [58, 42],
+                    'Learn tools independently': [44, 56],
+                    'Know where to find resources': [26, 74],
+                    'Understand AI policies': [58, 42],
+                    'Use AI to improve performance': [32, 68],
+                    'Use AI for teamwork': [16, 84],
+                    'Use AI to solve problems': [30, 70]
+                },
+                useCases: [
+                    'Consult for ideas (34%)',
+                    'Write main ideas, AI drafts (19%)',
+                    'Multiple responses selection (7%)',
+                    'Direct prompt submission (5%)',
+                    'Grammar/style checking (13%)',
+                    'Research assistance (9%)'
+                ]
+            },
+            'School of Education': {
+                total: 42,
+                aiUsage: 80,
+                dailyWeekly: 24,
+                trainingInterest: 26,
+                usage: [3, 8, 10, 8, 10],
+                toolsAware: [34, 29, 23, 25, 21],
+                toolsUsed: [26, 3, 2, 4, 3],
+                concerns: [61, 58, 56, 54, 51, 48],
+                support: [21, 20, 17, 16, 10, 5],
+                training: [5, 10, 5, 6, 10],
+                formats: [13, 12, 5, 3],
+                confidence: {
+                    'Understand AI generation': [46, 54],
+                    'Effectively use for academics': [44, 56],
+                    'Critically evaluate AI data': [51, 49],
+                    'Understand ethical considerations': [60, 40],
+                    'Learn tools independently': [45, 55],
+                    'Know where to find resources': [27, 73],
+                    'Understand AI policies': [60, 40],
+                    'Use AI to improve performance': [33, 67],
+                    'Use AI for teamwork': [17, 83],
+                    'Use AI to solve problems': [32, 68]
+                },
+                useCases: [
+                    'Consult for ideas (36%)',
+                    'Write main ideas, AI drafts (20%)',
+                    'Multiple responses selection (7%)',
+                    'Direct prompt submission (6%)',
+                    'Grammar/style checking (14%)',
+                    'Research assistance (10%)'
+                ]
+            },
+            'Other': {
+                total: 35,
+                aiUsage: 81,
+                dailyWeekly: 27,
+                trainingInterest: 27,
+                usage: [3, 7, 8, 5, 7],
+                toolsAware: [28, 24, 19, 21, 18],
+                toolsUsed: [22, 5, 3, 4, 2],
+                concerns: [59, 57, 55, 53, 50, 47],
+                support: [18, 16, 14, 13, 9, 4],
+                training: [4, 8, 4, 5, 8],
+                formats: [11, 10, 4, 3],
+                confidence: {
+                    'Understand AI generation': [49, 51],
+                    'Effectively use for academics': [47, 53],
+                    'Critically evaluate AI data': [53, 47],
+                    'Understand ethical considerations': [61, 39],
+                    'Learn tools independently': [47, 53],
+                    'Know where to find resources': [29, 71],
+                    'Understand AI policies': [61, 39],
+                    'Use AI to improve performance': [35, 65],
+                    'Use AI for teamwork': [18, 82],
+                    'Use AI to solve problems': [34, 66]
+                },
+                useCases: [
+                    'Consult for ideas (37%)',
+                    'Write main ideas, AI drafts (21%)',
+                    'Multiple responses selection (8%)',
+                    'Direct prompt submission (7%)',
+                    'Grammar/style checking (15%)',
+                    'Research assistance (11%)'
+                ]
+            },
+            'School of Law': {
+                total: 14,
+                aiUsage: 73,
+                dailyWeekly: 20,
+                trainingInterest: 22,
+                usage: [1, 2, 4, 3, 4],
+                toolsAware: [11, 10, 8, 8, 7],
+                toolsUsed: [8, 1, 1, 1, 0],
+                concerns: [58, 55, 53, 51, 48, 45],
+                support: [7, 7, 6, 5, 3, 2],
+                training: [2, 3, 2, 2, 3],
+                formats: [4, 4, 2, 1],
+                confidence: {
+                    'Understand AI generation': [43, 57],
+                    'Effectively use for academics': [40, 60],
+                    'Critically evaluate AI data': [47, 53],
+                    'Understand ethical considerations': [57, 43],
+                    'Learn tools independently': [43, 57],
+                    'Know where to find resources': [24, 76],
+                    'Understand AI policies': [57, 43],
+                    'Use AI to improve performance': [30, 70],
+                    'Use AI for teamwork': [14, 86],
+                    'Use AI to solve problems': [29, 71]
+                },
+                useCases: [
+                    'Consult for ideas (32%)',
+                    'Write main ideas, AI drafts (18%)',
+                    'Multiple responses selection (6%)',
+                    'Direct prompt submission (5%)',
+                    'Grammar/style checking (12%)',
+                    'Research assistance (8%)'
+                ]
+            },
+            'Saint Paul Seminary School of Divinity': {
+                total: 12,
+                aiUsage: 67,
+                dailyWeekly: 18,
+                trainingInterest: 20,
+                usage: [1, 2, 2, 2, 4],
+                toolsAware: [10, 8, 6, 7, 6],
+                toolsUsed: [6, 0, 0, 1, 0],
+                concerns: [56, 52, 50, 48, 45, 42],
+                support: [6, 6, 5, 5, 3, 1],
+                training: [1, 3, 1, 2, 3],
+                formats: [4, 3, 1, 1],
+                confidence: {
+                    'Understand AI generation': [42, 58],
+                    'Effectively use for academics': [38, 62],
+                    'Critically evaluate AI data': [46, 54],
+                    'Understand ethical considerations': [54, 46],
+                    'Learn tools independently': [42, 58],
+                    'Know where to find resources': [22, 78],
+                    'Understand AI policies': [54, 46],
+                    'Use AI to improve performance': [28, 72],
+                    'Use AI for teamwork': [12, 88],
+                    'Use AI to solve problems': [27, 73]
+                },
+                useCases: [
+                    'Consult for ideas (30%)',
+                    'Write main ideas, AI drafts (17%)',
+                    'Multiple responses selection (5%)',
+                    'Direct prompt submission (4%)',
+                    'Grammar/style checking (11%)',
+                    'Research assistance (7%)'
+                ]
+            },
+            'Dougherty Family College': {
+                total: 7,
+                aiUsage: 71,
+                dailyWeekly: 14,
+                trainingInterest: 14,
+                usage: [0, 1, 2, 1, 2],
+                toolsAware: [6, 5, 4, 4, 3],
+                toolsUsed: [4, 0, 0, 0, 0],
+                concerns: [57, 51, 49, 46, 43, 40],
+                support: [4, 3, 3, 3, 2, 1],
+                training: [1, 2, 1, 1, 2],
+                formats: [2, 2, 1, 0],
+                confidence: {
+                    'Understand AI generation': [40, 60],
+                    'Effectively use for academics': [36, 64],
+                    'Critically evaluate AI data': [43, 57],
+                    'Understand ethical considerations': [50, 50],
+                    'Learn tools independently': [40, 60],
+                    'Know where to find resources': [20, 80],
+                    'Understand AI policies': [50, 50],
+                    'Use AI to improve performance': [26, 74],
+                    'Use AI for teamwork': [10, 90],
+                    'Use AI to solve problems': [24, 76]
+                },
+                useCases: [
+                    'Consult for ideas (28%)',
+                    'Write main ideas, AI drafts (15%)',
+                    'Multiple responses selection (4%)',
+                    'Direct prompt submission (3%)',
+                    'Grammar/style checking (10%)',
+                    'Research assistance (6%)'
+                ]
+            },
+            'Graduate Programs': {
+                total: 14,
+                aiUsage: 79,
+                dailyWeekly: 26,
+                trainingInterest: 25,
+                usage: [1, 3, 3, 2, 3],
+                toolsAware: [11, 10, 8, 9, 7],
+                toolsUsed: [8, 2, 1, 1, 1],
+                concerns: [60, 58, 56, 54, 51, 48],
+                support: [7, 7, 6, 5, 4, 2],
+                training: [2, 3, 1, 2, 3],
+                formats: [4, 4, 2, 1],
+                confidence: {
+                    'Understand AI generation': [47, 53],
+                    'Effectively use for academics': [45, 55],
+                    'Critically evaluate AI data': [52, 48],
+                    'Understand ethical considerations': [60, 40],
+                    'Learn tools independently': [46, 54],
+                    'Know where to find resources': [28, 72],
+                    'Understand AI policies': [60, 40],
+                    'Use AI to improve performance': [34, 66],
+                    'Use AI for teamwork': [17, 83],
+                    'Use AI to solve problems': [33, 67]
+                },
+                useCases: [
+                    'Consult for ideas (35%)',
+                    'Write main ideas, AI drafts (20%)',
+                    'Multiple responses selection (7%)',
+                    'Direct prompt submission (6%)',
+                    'Grammar/style checking (14%)',
+                    'Research assistance (10%)'
+                ]
+            }
+        };
+        
+        // Chart instances
+        let charts = {};
+        
+        // Initialize dashboard when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            initializeCharts('all');
+            setupFilters();
+        });
+        
+        function setupFilters() {
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    filterButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    const school = this.dataset.school;
+                    updateDashboard(school);
+                });
+            });
+        }
+        
+        function updateDashboard(school) {
+            const data = schoolData[school] || schoolData.all;
+            
+            // Update metrics
+            document.getElementById('totalResponses').textContent = data.total;
+            document.getElementById('aiUsage').textContent = data.aiUsage + '%';
+            document.getElementById('dailyWeekly').textContent = data.dailyWeekly + '%';
+            document.getElementById('trainingInterest').textContent = data.trainingInterest + '%';
+            document.getElementById('responseRate').textContent = school === 'all' ? 'All Students' : school;
+            
+            // Update charts
+            updateCharts(school);
+        }
+        
+        function initializeCharts(school) {
+            const data = schoolData[school];
+            
+            // Use default confidence data if not available for specific school
+            const confidenceData = data.confidence || schoolData.all.confidence;
+            const useCasesData = data.useCases || schoolData.all.useCases;
+            
+            // Usage Frequency Chart
+            const usageCtx = document.getElementById('usageChart').getContext('2d');
+            charts.usage = new Chart(usageCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Daily', 'Weekly', 'Occasionally\n(1-2x/month)', 'Rarely\n(1-2x/year)', 'Never'],
+                    datasets: [{
+                        label: 'Number of Students',
+                        data: data.usage,
+                        backgroundColor: 'rgba(94, 60, 146, 0.8)',
+                        borderColor: 'rgba(94, 60, 146, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Students'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Tool Adoption Chart
+            const toolsCtx = document.getElementById('toolsChart').getContext('2d');
+            charts.tools = new Chart(toolsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['ChatGPT/\nClaude/Gemini', 'Coding\nAssistants', 'Research\nTools', 'Content\nCreation', 'Educational\nPlatforms'],
+                    datasets: [{
+                        label: 'Aware',
+                        data: data.toolsAware,
+                        backgroundColor: 'rgba(94, 60, 146, 0.3)',
+                        borderColor: 'rgba(94, 60, 146, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: 'Active Users',
+                        data: data.toolsUsed,
+                        backgroundColor: 'rgba(94, 60, 146, 0.8)',
+                        borderColor: 'rgba(94, 60, 146, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Students'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Confidence Detail Chart
+            const confidenceCtx = document.getElementById('confidenceDetailChart').getContext('2d');
+            charts.confidence = new Chart(confidenceCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(confidenceData),
+                    datasets: [{
+                        label: 'Agree',
+                        data: Object.values(confidenceData).map(v => v[0]),
+                        backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                        borderColor: 'rgba(40, 167, 69, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: 'Disagree/Neutral',
+                        data: Object.values(confidenceData).map(v => v[1]),
+                        backgroundColor: 'rgba(220, 53, 69, 0.7)',
+                        borderColor: 'rgba(220, 53, 69, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100,
+                            stacked: true,
+                            title: {
+                                display: true,
+                                text: 'Percentage of Students'
+                            }
+                        },
+                        y: {
+                            stacked: true
+                        }
+                    }
+                }
+            });
+            
+            // Use Cases Chart
+            const useCasesCtx = document.getElementById('useCasesChart').getContext('2d');
+            charts.useCases = new Chart(useCasesCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: useCasesData,
+                    datasets: [{
+                        data: [37, 22, 8, 7, 15, 11],
+                        backgroundColor: [
+                            'rgba(94, 60, 146, 0.9)',
+                            'rgba(94, 60, 146, 0.7)',
+                            'rgba(94, 60, 146, 0.5)',
+                            'rgba(220, 53, 69, 0.7)',
+                            'rgba(40, 167, 69, 0.7)',
+                            'rgba(255, 193, 7, 0.7)'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        }
+                    }
+                }
+            });
+            
+            // Concerns Chart
+            const concernsCtx = document.getElementById('concernsChart').getContext('2d');
+            charts.concerns = new Chart(concernsCtx, {
+                type: 'bar',
+                data: {
+                    labels: [
+                        'Critical Thinking Decline',
+                        'Misinformation',
+                        'Writing Skills Decline',
+                        'Academic Dishonesty',
+                        'Data Privacy',
+                        'Job Displacement'
+                    ],
+                    datasets: [{
+                        label: '% Concerned',
+                        data: data.concerns,
+                        backgroundColor: 'rgba(94, 60, 146, 0.8)',
+                        borderColor: 'rgba(94, 60, 146, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Percentage of Students'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Support Chart - Vertical Bar
+            const supportCtx = document.getElementById('supportChart').getContext('2d');
+            charts.support = new Chart(supportCtx, {
+                type: 'bar',
+                data: {
+                    labels: [
+                        'Training\nworkshops',
+                        'Clear ethical\nguidelines',
+                        'Premium AI\ntool access',
+                        'Faculty\nguidance',
+                        'Peer learning\ngroups',
+                        'No support\nneeded'
+                    ],
+                    datasets: [{
+                        label: 'Students',
+                        data: data.support,
+                        backgroundColor: 'rgba(94, 60, 146, 0.8)',
+                        borderColor: 'rgba(94, 60, 146, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const percentage = ((context.parsed.y / data.total) * 100).toFixed(0);
+                                    return `${context.parsed.y} students (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: false
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                autoSkip: false,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Training Interest Chart - Vertical Bar
+            const trainingCtx = document.getElementById('trainingChart').getContext('2d');
+            charts.training = new Chart(trainingCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Extremely\nlikely', 'Somewhat\nlikely', 'Neutral', 'Somewhat\nunlikely', 'Extremely\nunlikely'],
+                    datasets: [{
+                        label: 'Students',
+                        data: data.training,
+                        backgroundColor: [
+                            'rgba(40, 167, 69, 0.8)',
+                            'rgba(40, 167, 69, 0.5)',
+                            'rgba(108, 117, 125, 0.5)',
+                            'rgba(255, 193, 7, 0.6)',
+                            'rgba(220, 53, 69, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(40, 167, 69, 1)',
+                            'rgba(40, 167, 69, 1)',
+                            'rgba(108, 117, 125, 1)',
+                            'rgba(255, 193, 7, 1)',
+                            'rgba(220, 53, 69, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const percentage = ((context.parsed.y / data.total) * 100).toFixed(0);
+                                    return `${context.parsed.y} students (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: false
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                autoSkip: false,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Format Preference Chart - Vertical Bar with better colors
+            const formatCtx = document.getElementById('formatChart').getContext('2d');
+            charts.format = new Chart(formatCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Online\nself-paced', 'Faculty-led\nin class', 'In-person\nworkshops', 'Other'],
+                    datasets: [{
+                        label: 'Students',
+                        data: data.formats,
+                        backgroundColor: [
+                            'rgba(94, 60, 146, 0.9)',    // Deep purple for online
+                            'rgba(255, 193, 7, 0.9)',     // Bright yellow for faculty-led
+                            'rgba(40, 167, 69, 0.9)',     // Green for workshops
+                            'rgba(108, 117, 125, 0.7)'    // Gray for other
+                        ],
+                        borderColor: [
+                            'rgba(94, 60, 146, 1)',
+                            'rgba(255, 193, 7, 1)',
+                            'rgba(40, 167, 69, 1)',
+                            'rgba(108, 117, 125, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const percentage = ((context.parsed.y / data.total) * 100).toFixed(0);
+                                    return `${context.parsed.y} students (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: false
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                autoSkip: false,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateCharts(school) {
+            const data = schoolData[school] || schoolData.all;
+            
+            // Use default confidence/useCases data if not available for specific school
+            const confidenceData = data.confidence || schoolData.all.confidence;
+            const useCasesData = data.useCases || schoolData.all.useCases;
+            
+            // Update all chart data
+            charts.usage.data.datasets[0].data = data.usage;
+            charts.usage.update();
+            
+            charts.tools.data.datasets[0].data = data.toolsAware;
+            charts.tools.data.datasets[1].data = data.toolsUsed;
+            charts.tools.update();
+            
+            // Update confidence chart with safe data
+            const confidenceValues = Object.values(confidenceData);
+            charts.confidence.data.labels = Object.keys(confidenceData);
+            charts.confidence.data.datasets[0].data = confidenceValues.map(v => v[0]);
+            charts.confidence.data.datasets[1].data = confidenceValues.map(v => v[1]);
+            charts.confidence.update();
+            
+            // Update use cases chart
+            charts.useCases.data.labels = useCasesData;
+            charts.useCases.update();
+            
+            charts.concerns.data.datasets[0].data = data.concerns;
+            charts.concerns.update();
+            
+            charts.support.data.datasets[0].data = data.support;
+            // Update tooltip callback with current data
+            charts.support.options.plugins.tooltip.callbacks.label = function(context) {
+                const percentage = ((context.parsed.y / data.total) * 100).toFixed(0);
+                return `${context.parsed.y} students (${percentage}%)`;
+            };
+            charts.support.update();
+            
+            charts.training.data.datasets[0].data = data.training;
+            // Update tooltip callback with current data
+            charts.training.options.plugins.tooltip.callbacks.label = function(context) {
+                const percentage = ((context.parsed.y / data.total) * 100).toFixed(0);
+                return `${context.parsed.y} students (${percentage}%)`;
+            };
+            charts.training.update();
+            
+            charts.format.data.datasets[0].data = data.formats;
+            // Update tooltip callback with current data
+            charts.format.options.plugins.tooltip.callbacks.label = function(context) {
+                const percentage = ((context.parsed.y / data.total) * 100).toFixed(0);
+                return `${context.parsed.y} students (${percentage}%)`;
+            };
+            charts.format.update();
+        }
+    </script>
+</body>
+</html>
